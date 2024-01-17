@@ -1,0 +1,248 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-9">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <p>{{ message }}</p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        
+    </div>
+   
+    
+    <div class="modal fade" id="agregarModal" tabindex="-1" role="dialog" aria-labelledby="agregarModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agregarModalLabel">Agregar Producto</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Formulario de Agregar Producto -->
+                    <form action="{{ url_for('agregar_producto') }}" method="POST">
+                        <label for="rubro">Rubro:</label>
+                        <div class="dropdown">
+                            <a class="btn btn-info dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                            Seleccione Rubro
+                            </a>
+                            <div>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                <select id="rubro" name="rubro" required>
+                                    {% for ru in rubro %}
+                                        
+                                        <option class="dropdown-item text-info" >{{ru.0}}---{{ru.1}}</option>
+                                        
+                                        
+                                    {% endfor %}
+                                </select>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <label for="cod_scanner">Código Scanner:</label>
+                        <input type="text" id="cod_scanner" name="cod_scanner" required><br>
+    
+                        <label for="nombre">Nombre:</label>
+                        <input type="text" id="nombre" name="nombre" required><br>
+                        
+                        <label for="iva">Iva:</label>
+                        <div class="dropdown">
+                            <a class="btn btn-info dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                            Seleccione IVA
+                            </a>
+                            <div>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                <select id="iva" name="iva" required>
+                                    {% for iv in iva %}
+                                        
+                                        <option class="dropdown-item text-info" >{{iv.0}}---{{iv.1}}</option>
+                                        
+                                        
+                                    {% endfor %}
+                                </select>
+                                </ul>
+                            </div>
+                        </div>
+
+
+                        <label for="precio_costo">Precio Costo:</label>
+                        <input type="text" id="precio_costo" name="precio_costo" required><br>
+    
+                        <label for="precio_venta1">Precio Venta 1:</label>
+                        <input type="text" id="precio_venta1" name="precio_venta1" required><br>
+    
+                        <label for="precio_venta2">Precio Venta 2:</label>
+                        <input type="text" id="precio_venta2" name="precio_venta2" required><br>
+    
+                        <label for="precio_venta3">Precio Venta 3:</label>
+                        <input type="text" id="precio_venta3" name="precio_venta3" required><br>
+    
+                        <label for="stock_minimo">Stock Mínimo:</label>
+                        <input type="text" id="stock_minimo" name="stock_minimo" required><br>
+    
+                        <label for="stock_actual">Stock Actual:</label>
+                        <input type="text" id="stock_actual" name="stock_actual" required><br>
+                        <br>
+                        <input type="submit" value="Agregar">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-9 m-5">
+        <h3 class="fw-bold titulo">Listado productos</h3>
+        <br>
+        <button type="button" class="btn btn-success col-md-3" data-toggle="modal" data-target="#agregarModal">
+            Agregar Producto
+        </button><br><br>
+        <table id="mitabla" class="table table-sm table-bordered border-white" style="width: 100%">
+            <thead>
+                <tr class="table-active">
+                    <th scope="row">ID</th>
+                    <th scope="row">rubro</th>
+                    <th scope="row">cod_scanner</th>
+                    <th scope="row">Nombre</th>
+                    <th scope="row">iva</th>
+                    <th scope="row">precio_c</th>
+                    <th scope="row">p_v1</th>
+                    <th scope="row">p_v2</th>
+                    <th scope="row">p_v3</th>
+                    <th scope="row">stock minimo</th>
+                    <th scope="row">stock actual</th>
+                    <th scope="row">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                    
+                <tr>
+                    <td colspan="1">{{ producto.0 }}</td>
+                    <td colspan="1">{{ producto.1 }}</td> 
+                    <td colspan="1">{{ producto.2 }}</td>
+                    <td colspan="1">{{ producto.3 }}</td>
+                    <td colspan="1">{{ producto.4 }}</td>
+                    <td colspan="1">{{ producto.5 }}</td>
+                    <td colspan="1">{{ producto.6 }}</td>
+                    <td colspan="1">{{ producto.7 }}</td>
+                    <td colspan="1">{{ producto.8 }}</td>
+                    <td colspan="1">{{ producto.9 }}</td>
+                    <td colspan="1">{{ producto.10 }}</td>
+                    <td colspan="1">
+                        <a class="fa-solid fa-pen-to-square" style="color: #fbf471;"
+                                data-toggle="modal" data-target="#editarModal{{ producto.0 }}">
+                        
+                        </a>
+                        <a class="fa-solid fa-trash" style="color: #ff2222;"
+                           href="{{ url_for('eliminar_producto', id_producto=producto.0) }}"
+                           onclick="return confirm('¿Estás seguro que deseas eliminar este producto?')">
+                            
+                        </a>
+                    </td>
+                </tr>
+                <div class="modal fade" id="editarModal{{ producto.0 }}" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel{{ producto.0 }}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editarModalLabel{{ producto.0 }}">Editar Producto</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{{ url_for('editar_producto', id_producto=producto.0) }}" method="POST">
+                                    <label for="rubro">Rubro:</label>
+                                    <div class="dropdown">
+                                        <a class="btn btn-info dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Seleccione Rubro
+                                        </a>
+                                        <div>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                            <select id="rubro" name="rubro" required>
+                                                {% for ru in rubro %}
+                                                    
+                                                    <option class="dropdown-item text-info" >{{ru.0}}---{{ru.1}}</option>
+                                                    
+                                                    
+                                                {% endfor %}
+                                            </select>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cod_scanner">Código Scanner:</label>
+                                        <input type="text" class="form-control" id="cod_scanner" name="cod_scanner" value="{{ producto.2 }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nombre">Nombre:</label>
+                                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ producto.3 }}" required>
+                                    </div>
+                                    <label for="iva">Iva:</label>
+                                    <div class="dropdown">
+                                            <a class="btn btn-info dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Seleccione IVA
+                                            </a>
+                                            <div>
+                                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                                <select id="iva" name="iva" required>
+                                                    {% for iv in iva %}
+                                                        
+                                                        <option class="dropdown-item text-info" >{{iv.0}}---{{iv.1}}</option>
+                                                        
+                                                        
+                                                    {% endfor %}
+                                                </select>
+                                                </ul>
+                                            </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="precio_c">Precio Costo:</label>
+                                        <input type="text" class="form-control" id="precio_c" name="precio_c" value="{{ producto.5 }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="p_v1">P_v1:</label>
+                                        <input type="text" class="form-control" id="p_v1" name="p_v1" value="{{ producto.6 }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="p_v2">P_v2:</label>
+                                        <input type="text" class="form-control" id="p_v2" name="p_v2" value="{{ producto.7 }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="p_v3">P_v3:</label>
+                                        <input type="text" class="form-control" id="p_v3" name="p_v3" value="{{ producto.8 }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="stock_minimo">stock minimo:</label>
+                                        <input type="text" class="form-control" id="stock_minimo" name="stock_minimo" value="{{ producto.9 }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="stock_actual">stock actual:</label>
+                                        <input type="text" class="form-control" id="stock_actual" name="stock_actual" value="{{ producto.10 }}" required>
+                                    </div>
+                                    <!-- Agrega aquí los campos adicionales según tu nueva estructura -->
+                                    <!-- ... -->
+                                    <button class="btn btn-primary" type="submit">Guardar</button>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

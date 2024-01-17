@@ -1,0 +1,697 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 12-12-2023 a las 14:15:58
+-- Versión del servidor: 10.4.28-MariaDB
+-- Versión de PHP: 8.2.4
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Base de datos: `lab2023`
+--
+
+DELIMITER $$
+--
+-- Procedimientos
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_cuotas_ins` (IN `_id_venta` INTEGER, IN `_fecha_ini` DATE, IN `_cuantas` SMALLINT, IN `_total` FLOAT)   BEGIN
+	DECLARE i INT;
+	DECLARE datenew DATE;
+    DECLARE monto FLOAT;
+    
+	SET monto = _total / _cuantas;
+	SET i = 1;
+
+	REPEAT
+		SET datenew = ( SELECT DATE_ADD( _fecha_ini, INTERVAL 1 MONTH ) );	
+        INSERT INTO venta_cuota
+        (	
+        	id_venta,
+            id_cuota,
+            valor,
+            fecha_venc
+        )
+        VALUES
+        (
+            _id_venta,
+            i,
+            monto,
+            datenew
+        );
+		
+        SET i = i + 1;
+		UNTIL i > _cuantas
+	END REPEAT;
+END$$
+
+--
+-- Funciones
+--
+CREATE DEFINER=`root`@`localhost` FUNCTION `DevVenta` (`_id_venta` INTEGER) RETURNS DOUBLE  BEGIN
+	DECLARE _iva double;
+    SET _iva = ( SELECT SUM(iva) FROM venta_item WHERE id_venta= _id_venta);
+	RETURN _iva;
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `cliente`
+--
+
+CREATE TABLE `cliente` (
+  `id_cliente` int(11) NOT NULL,
+  `id_lista` tinyint(1) DEFAULT 1,
+  `cuit` varchar(13) DEFAULT NULL,
+  `nombre` varchar(100) DEFAULT NULL,
+  `direccion` varchar(100) DEFAULT NULL,
+  `telefono` varchar(100) DEFAULT NULL,
+  `cta_cte` char(1) DEFAULT NULL,
+  `saldo_inicial` double(15,5) DEFAULT 0.00000,
+  `saldo_actual` double(15,5) DEFAULT 0.00000,
+  `limite_cred` double(15,5) DEFAULT 0.00000,
+  `plazo_cred` tinyint(4) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='InnoDB free: 15360 kB; InnoDB ' ROW_FORMAT=DYNAMIC;
+
+--
+-- Volcado de datos para la tabla `cliente`
+--
+
+INSERT INTO `cliente` (`id_cliente`, `id_lista`, `cuit`, `nombre`, `direccion`, `telefono`, `cta_cte`, `saldo_inicial`, `saldo_actual`, `limite_cred`, `plazo_cred`) VALUES
+(1, 1, '1', 'PEREZ, JUAN PABLO', 'MADARIAGA 739', '425254', 'S', 0.00000, 0.00000, 0.00000, 0),
+(2, 1, '2', 'MEZA, LEOPOLDO MAXIMILIANO', 'COLON 555', '423752', 'S', 0.00000, 0.00000, 0.00000, 0),
+(3, 2, '3', 'DUARTE, DOROTEO FACUNDINO', 'COLON 935', '425325', 'N', 0.00000, 0.00000, 0.00000, 0),
+(4, 1, '4', 'FERNANDEZ, FILIPERTO EZEQUIEL', 'BONPLAND 844', '423381', 'S', 0.00000, 0.00000, 0.00000, 0),
+(13, 1, '5', 'papu', 'calle falsa 123', '37725123', 's', 0.00000, 0.00000, 0.00000, 0),
+(14, 1, '10', 'papu2', 'calle falsa', '377123', 'S', 0.00000, 0.00000, 0.00000, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `iva`
+--
+
+CREATE TABLE `iva` (
+  `id_iva` smallint(6) NOT NULL,
+  `descripcion` varchar(50) DEFAULT NULL,
+  `tasa` decimal(10,2) DEFAULT NULL,
+  `adicional` decimal(10,2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='InnoDB free: 15360 kB; InnoDB ' ROW_FORMAT=DYNAMIC;
+
+--
+-- Volcado de datos para la tabla `iva`
+--
+
+INSERT INTO `iva` (`id_iva`, `descripcion`, `tasa`, `adicional`) VALUES
+(1, 'NO GRAVADO', 0.00, 0.00),
+(2, 'EXENTO', 0.00, 0.00),
+(3, '0%', 0.00, 0.00),
+(4, '10.50%', 10.50, 0.00),
+(5, '21%', 21.00, 0.00),
+(6, '27%', 27.00, 0.00);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `medio_pago`
+--
+
+CREATE TABLE `medio_pago` (
+  `id_medio` smallint(6) NOT NULL,
+  `nombre` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='InnoDB free: 15360 kB; InnoDB ' ROW_FORMAT=DYNAMIC;
+
+--
+-- Volcado de datos para la tabla `medio_pago`
+--
+
+INSERT INTO `medio_pago` (`id_medio`, `nombre`) VALUES
+(3, 'CHEQUE'),
+(1, 'CONTADO EFECTIVO'),
+(2, 'CUENTA CORRIENTE'),
+(4, 'CUOTAS'),
+(10, 'DEPOSITOS'),
+(8, 'DESCUENTOS'),
+(7, 'OTROS MEDIOS DE PAGO'),
+(11, 'SALDO A FAVOR'),
+(5, 'TARJETA DE CREDITO'),
+(6, 'TARJETA DE DEBITO'),
+(9, 'TRANSFERENCIA BANCARIA');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `producto`
+--
+
+CREATE TABLE `producto` (
+  `id_producto` int(11) NOT NULL,
+  `id_rubro` smallint(6) DEFAULT 0,
+  `cod_scanner` varchar(13) DEFAULT NULL,
+  `nombre` varchar(100) DEFAULT NULL,
+  `id_iva` smallint(6) DEFAULT 0,
+  `precio_costo` double(15,5) DEFAULT 0.00000,
+  `precio_venta1` double(15,5) DEFAULT 0.00000,
+  `precio_venta2` double(15,5) DEFAULT 0.00000,
+  `precio_venta3` double(15,5) DEFAULT 0.00000,
+  `stock_minimo` double(15,2) DEFAULT 0.00,
+  `stock_actual` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='InnoDB free: 15360 kB; InnoDB ' ROW_FORMAT=DYNAMIC;
+
+--
+-- Volcado de datos para la tabla `producto`
+--
+
+INSERT INTO `producto` (`id_producto`, `id_rubro`, `cod_scanner`, `nombre`, `id_iva`, `precio_costo`, `precio_venta1`, `precio_venta2`, `precio_venta3`, `stock_minimo`, `stock_actual`) VALUES
+(1, 1, '111111111', 'LICUADORA PHILLIPS 1001', 5, 1000.00000, 1300.00000, 1400.00000, 1500.00000, 20.00, 82),
+(2, 1, '222222222', 'PLANCHA PHILLIPS 777', 5, 1100.00000, 1400.00000, 1500.00000, 1600.00000, 10.00, 3),
+(3, 1, '333333333', 'PLANCHA PHILLIPS 7773', 5, 1500.00000, 1700.00000, 1900.00000, 2100.00000, 10.00, 3),
+(4, 2, '444444444', 'JUEGO TUBOS BAHCO MOD 5100', 5, 3000.00000, 3400.00000, 3500.00000, 3600.00000, 5.00, 13),
+(5, 2, '555555555', 'AMOLADORA STILL 100', 5, 4000.00000, 5000.00000, 5500.00000, 6000.00000, 20.00, 16),
+(6, 2, '666666666', 'SOLDADORA INVERTER KLATTER 100AH', 5, 8000.00000, 12000.00000, 13500.00000, 15000.00000, 10.00, 46),
+(7, 3, '777777777', 'SONY ENERGY POWER 5', 5, 20000.00000, 30000.00000, 35000.00000, 40000.00000, 5.00, 8),
+(8, 3, '888888888', 'SONY 500 50K PMPO', 5, 30000.00000, 45000.00000, 50000.00000, 52000.00000, 3.00, -5),
+(10, 2, '111111111', 'bicimoto', 6, 10000.00000, 1300.00000, 12000.00000, 13000.00000, 5.00, 13),
+(11, 0, '1111111111111', 'fasdad', 0, 123132123.00000, 123123.00000, 123123.00000, 123123.00000, 111111.00, 11111);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `rubro`
+--
+
+CREATE TABLE `rubro` (
+  `id_rubro` smallint(6) NOT NULL,
+  `nombre` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='InnoDB free: 15360 kB; InnoDB ' ROW_FORMAT=DYNAMIC;
+
+--
+-- Volcado de datos para la tabla `rubro`
+--
+
+INSERT INTO `rubro` (`id_rubro`, `nombre`) VALUES
+(3, 'AUDIO'),
+(5, 'COCINAS'),
+(1, 'ELECTRODOMESTICOS'),
+(6, 'HELADERAS'),
+(2, 'KIT HERRAMIENTAS'),
+(4, 'TV');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `venta`
+--
+
+CREATE TABLE `venta` (
+  `id_venta` int(11) NOT NULL,
+  `id_cliente` int(11) DEFAULT 0,
+  `tipo_comprobante` varchar(3) NOT NULL DEFAULT '',
+  `nro_comprobante` varchar(13) NOT NULL DEFAULT '',
+  `fecha` date DEFAULT NULL,
+  `neto` double(15,5) DEFAULT 0.00000,
+  `iva` double(15,5) DEFAULT 0.00000,
+  `montototal` double(15,5) DEFAULT 0.00000
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='InnoDB free: 15360 kB; InnoDB ' ROW_FORMAT=DYNAMIC;
+
+--
+-- Volcado de datos para la tabla `venta`
+--
+
+INSERT INTO `venta` (`id_venta`, `id_cliente`, `tipo_comprobante`, `nro_comprobante`, `fecha`, `neto`, `iva`, `montototal`) VALUES
+(104, 0, 'IG', '0003-00000003', '2023-11-08', 949.00000, 351.00000, 1400.00000),
+(105, 13, 'AA', '0004-00000004', '2023-10-08', 1106.00000, 294.00000, 1400.00000),
+(106, 13, 'LX', '0005-00000005', '2023-11-10', 9480.00000, 2520.00000, 12000.00000),
+(111, 1, 'EL', '0006-00000006', '2023-12-10', 7900.00000, 2100.00000, 10000.00000),
+(112, 4, 'SJ', '0007-00000007', '2023-12-10', 23700.00000, 6300.00000, 30000.00000),
+(113, 2, 'BD', '0008-00000008', '2023-12-10', 71100.00000, 18900.00000, 90000.00000),
+(114, 1, 'Xp', '0009-00000009', '2023-12-10', 18960.00000, 5040.00000, 24000.00000),
+(115, 2, 'ES', '0010-00000010', '2023-12-10', 35550.00000, 9450.00000, 45000.00000),
+(116, 3, 'HB', '0011-00000011', '2023-12-10', 5372.00000, 1428.00000, 6800.00000),
+(117, 14, 'LT', '0012-00000012', '2023-12-10', 35550.00000, 9450.00000, 45000.00000),
+(118, 2, 'LO', '0013-00000013', '2023-12-10', 1343.00000, 357.00000, 1700.00000),
+(119, 0, 'KJ', '0014-00000014', '2023-12-12', 9480.00000, 2520.00000, 11000.00000),
+(120, 0, 'YW', '0015-00000015', '2023-12-12', 949.00000, 351.00000, 1400.00000),
+(121, 0, 'UD', '0016-00000016', '2023-12-12', 1106.00000, 294.00000, 1300.00000),
+(122, 1, 'RY', '0017-00000017', '2023-12-12', 1027.00000, 273.00000, 1300.00000),
+(123, 2, 'IS', '0018-00000018', '2023-12-12', 1106.00000, 294.00000, 1400.00000),
+(124, 3, 'XE', '0019-00000019', '2023-12-12', 2686.00000, 714.00000, 3400.00000),
+(125, 13, 'dd', '0020-00000020', '2023-12-12', 23700.00000, 6300.00000, 30000.00000),
+(126, 0, 'DX', '0021-00000021', '2023-12-12', 106650.00000, 28350.00000, 15000.00000),
+(127, 13, 'LT', '0022-00000022', '2023-12-12', 1027.00000, 273.00000, 1300.00000);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `venta_cuota`
+--
+
+CREATE TABLE `venta_cuota` (
+  `id_cuota` int(11) NOT NULL,
+  `id_venta` int(11) NOT NULL,
+  `valor` double(15,5) DEFAULT NULL,
+  `fecha_venc` date DEFAULT NULL,
+  `valor_venc` double(15,5) DEFAULT NULL,
+  `fecha_pago` date DEFAULT NULL,
+  `valor_pago` double(15,5) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci ROW_FORMAT=DYNAMIC;
+
+--
+-- Volcado de datos para la tabla `venta_cuota`
+--
+
+INSERT INTO `venta_cuota` (`id_cuota`, `id_venta`, `valor`, `fecha_venc`, `valor_venc`, `fecha_pago`, `valor_pago`) VALUES
+(100, 105, 525.00000, '2024-01-08', 787.50000, NULL, NULL),
+(101, 105, 525.00000, '2024-02-08', 787.50000, NULL, NULL),
+(102, 105, 525.00000, '2024-03-10', 787.50000, NULL, NULL),
+(103, 105, 525.00000, '2024-04-10', 787.50000, NULL, NULL),
+(104, 105, 525.00000, '2024-05-11', 787.50000, NULL, NULL),
+(105, 105, 525.00000, '2024-06-11', 787.50000, NULL, NULL),
+(106, 106, 6600.00000, '2024-01-08', 9900.00000, NULL, NULL),
+(107, 106, 6600.00000, '2024-02-08', 9900.00000, NULL, NULL),
+(108, 106, 6600.00000, '2024-03-10', 9900.00000, NULL, NULL),
+(121, 112, 11250.00000, '2024-01-10', 16875.00000, NULL, NULL),
+(122, 112, 11250.00000, '2024-02-10', 16875.00000, NULL, NULL),
+(123, 112, 11250.00000, '2024-03-12', 16875.00000, NULL, NULL),
+(124, 112, 11250.00000, '2024-04-12', 16875.00000, NULL, NULL),
+(125, 112, 11250.00000, '2024-05-13', 16875.00000, NULL, NULL),
+(126, 112, 11250.00000, '2024-06-13', 16875.00000, NULL, NULL),
+(127, 113, 49500.00000, '2024-01-10', 74250.00000, NULL, NULL),
+(128, 113, 49500.00000, '2024-02-10', 74250.00000, NULL, NULL),
+(129, 113, 49500.00000, '2024-03-12', 74250.00000, NULL, NULL),
+(130, 114, 9000.00000, '2024-01-10', 13500.00000, NULL, NULL),
+(131, 114, 9000.00000, '2024-02-10', 13500.00000, NULL, NULL),
+(132, 114, 9000.00000, '2024-03-12', 13500.00000, NULL, NULL),
+(133, 114, 9000.00000, '2024-04-12', 13500.00000, NULL, NULL),
+(134, 114, 9000.00000, '2024-05-13', 13500.00000, NULL, NULL),
+(135, 114, 9000.00000, '2024-06-13', 13500.00000, NULL, NULL),
+(136, 117, 12937.50000, '2024-01-10', 19406.25000, NULL, NULL),
+(137, 117, 12937.50000, '2024-02-10', 19406.25000, NULL, NULL),
+(138, 117, 12937.50000, '2024-03-12', 19406.25000, NULL, NULL),
+(139, 117, 12937.50000, '2024-04-12', 19406.25000, NULL, NULL),
+(140, 117, 12937.50000, '2024-05-13', 19406.25000, NULL, NULL),
+(141, 117, 12937.50000, '2024-06-13', 19406.25000, NULL, NULL),
+(142, 117, 12937.50000, '2024-07-14', 19406.25000, NULL, NULL),
+(143, 117, 12937.50000, '2024-08-14', 19406.25000, NULL, NULL),
+(144, 117, 12937.50000, '2024-09-14', 19406.25000, NULL, NULL),
+(145, 117, 12937.50000, '2024-10-15', 19406.25000, NULL, NULL),
+(146, 117, 12937.50000, '2024-11-15', 19406.25000, NULL, NULL),
+(147, 117, 12937.50000, '2024-12-16', 19406.25000, NULL, NULL),
+(148, 127, 715.00000, '2024-01-12', 1072.50000, NULL, NULL),
+(149, 127, 715.00000, '2024-02-12', 1072.50000, NULL, NULL),
+(150, 127, 715.00000, '2024-03-14', 1072.50000, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `venta_item`
+--
+
+CREATE TABLE `venta_item` (
+  `id_venta` int(11) NOT NULL,
+  `item` tinyint(4) NOT NULL,
+  `id_producto` int(11) DEFAULT 0,
+  `stock_actual` double(15,5) DEFAULT 0.00000 COMMENT 'stock anterior disponible',
+  `cantidad` double(15,5) DEFAULT 0.00000,
+  `precio` double(15,5) DEFAULT 0.00000,
+  `precio_costo` double(15,5) DEFAULT 0.00000,
+  `descuento` double(15,3) DEFAULT 0.000,
+  `neto` double(15,5) DEFAULT 0.00000,
+  `iva` double(15,5) DEFAULT 0.00000
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='InnoDB free: 15360 kB; InnoDB ' ROW_FORMAT=DYNAMIC;
+
+--
+-- Volcado de datos para la tabla `venta_item`
+--
+
+INSERT INTO `venta_item` (`id_venta`, `item`, `id_producto`, `stock_actual`, `cantidad`, `precio`, `precio_costo`, `descuento`, `neto`, `iva`) VALUES
+(1, 1, 1, 100.00000, 1.00000, 1000.00000, 800.00000, 0.000, 790.00000, 210.00000),
+(1, 2, 2, 50.00000, 2.00000, 100.00000, 80.00000, 0.000, 79.00000, 21.00000),
+(4, 0, 1, 10.00000, 2.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(5, 0, 1, 0.00000, 2.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(6, 0, 1, 0.00000, 2.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(7, 0, 1, 0.00000, 2.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(8, 0, 1, 0.00000, 2.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(9, 0, 1, 0.00000, 1.20000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(10, 0, 1, 0.00000, 1.20000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(11, 0, 1, 0.00000, 1.20000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(12, 0, 3, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(13, 0, 3, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(14, 0, 3, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(15, 0, 1, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(16, 0, 1, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(17, 0, 1, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(18, 0, 1, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(19, 0, 1, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(20, 0, 1, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(21, 0, 1, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(22, 0, 2, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(23, 0, 3, 0.00000, 1.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(24, 0, 1, 0.00000, 2.00000, 0.00000, 0.00000, 0.000, 0.00000, 0.00000),
+(25, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(26, 0, 1, 0.00000, 1.00000, 1700.00000, 0.00000, 0.000, 1700.00000, 0.00000),
+(27, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(28, 0, 2, 0.00000, 1.00000, 3400.00000, 0.00000, 0.000, 3400.00000, 0.00000),
+(29, 0, 1, 0.00000, 1.00000, 1400.00000, 0.00000, 0.000, 1400.00000, 0.00000),
+(32, 0, 1, 0.00000, 4.00000, 5200.00000, 0.00000, 0.000, 5200.00000, 0.00000),
+(33, 0, 2, 0.00000, 1.00000, 5000.00000, 0.00000, 0.000, 5000.00000, 0.00000),
+(34, 0, 1, 0.00000, 2.00000, 2800.00000, 0.00000, 0.000, 2800.00000, 0.00000),
+(35, 0, 3, 0.00000, 1.00000, 30000.00000, 0.00000, 0.000, 30000.00000, 0.00000),
+(51, 0, 1, 0.00000, 1.00000, 1400.00000, 0.00000, 0.000, 1400.00000, 0.00000),
+(52, 0, 3, 0.00000, 1.00000, 30000.00000, 0.00000, 0.000, 30000.00000, 0.00000),
+(53, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(54, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(55, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(56, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(57, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(58, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(59, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(60, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(61, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(62, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(63, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(64, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(65, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(66, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(67, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 0.00000),
+(68, 0, 1, 0.00000, 3.00000, 5100.00000, 0.00000, 0.000, 5100.00000, 0.00000),
+(69, 0, 1, 0.00000, 5.00000, 6500.00000, 0.00000, 0.000, 6500.00000, 0.00000),
+(70, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1300.00000, 273.00000),
+(71, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(72, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(73, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(74, 0, 1, 0.00000, 2.00000, 2600.00000, 0.00000, 0.000, 2054.00000, 546.00000),
+(75, 0, 1, 0.00000, 1.00000, 5200.00000, 0.00000, 0.000, 4108.00000, 1092.00000),
+(76, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(77, 0, 1, 0.00000, 2.00000, 2600.00000, 0.00000, 0.000, 2054.00000, 546.00000),
+(78, 0, 1, 0.00000, 2.00000, 2600.00000, 0.00000, 0.000, 2054.00000, 546.00000),
+(79, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(80, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(81, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(82, 0, 1, 0.00000, 2.00000, 2800.00000, 0.00000, 0.000, 2212.00000, 588.00000),
+(83, 0, 1, 0.00000, 1.00000, 1400.00000, 0.00000, 0.000, 1106.00000, 294.00000),
+(84, 0, 1, 0.00000, 1.00000, 1400.00000, 0.00000, 0.000, 1106.00000, 294.00000),
+(85, 0, 1, 0.00000, 1.00000, 1400.00000, 0.00000, 0.000, 1106.00000, 294.00000),
+(86, 0, 2, 0.00000, 1.00000, 1400.00000, 0.00000, 0.000, 1106.00000, 294.00000),
+(89, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(90, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(91, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(92, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(93, 0, 10, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 949.00000, 351.00000),
+(94, 0, 10, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 949.00000, 351.00000),
+(95, 0, 10, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 949.00000, 351.00000),
+(96, 0, 10, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 949.00000, 351.00000),
+(97, 0, 10, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 949.00000, 351.00000),
+(98, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(99, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(100, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(101, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(102, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(103, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(104, 0, 10, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 949.00000, 351.00000),
+(105, 0, 2, 0.00000, 1.00000, 1400.00000, 0.00000, 0.000, 1106.00000, 294.00000),
+(106, 0, 6, 0.00000, 1.00000, 12000.00000, 0.00000, 0.000, 9480.00000, 2520.00000),
+(107, 0, 3, 0.00000, 1.00000, 1700.00000, 0.00000, 0.000, 1343.00000, 357.00000),
+(108, 0, 3, 0.00000, 1.00000, 1700.00000, 0.00000, 0.000, 1343.00000, 357.00000),
+(110, 0, 4, 0.00000, 1.00000, 3400.00000, 0.00000, 0.000, 2686.00000, 714.00000),
+(111, 0, 5, 0.00000, 2.00000, 10000.00000, 0.00000, 0.000, 7900.00000, 2100.00000),
+(112, 0, 7, 0.00000, 1.00000, 30000.00000, 0.00000, 0.000, 23700.00000, 6300.00000),
+(113, 0, 8, 0.00000, 2.00000, 90000.00000, 0.00000, 0.000, 71100.00000, 18900.00000),
+(114, 0, 6, 0.00000, 2.00000, 24000.00000, 0.00000, 0.000, 18960.00000, 5040.00000),
+(115, 0, 8, 0.00000, 1.00000, 45000.00000, 0.00000, 0.000, 35550.00000, 9450.00000),
+(116, 0, 4, 0.00000, 2.00000, 6800.00000, 0.00000, 0.000, 5372.00000, 1428.00000),
+(117, 0, 8, 0.00000, 1.00000, 45000.00000, 0.00000, 0.000, 35550.00000, 9450.00000),
+(118, 0, 3, 0.00000, 1.00000, 1700.00000, 0.00000, 0.000, 1343.00000, 357.00000),
+(119, 0, 6, 0.00000, 1.00000, 12000.00000, 0.00000, 0.000, 9480.00000, 2520.00000),
+(120, 0, 10, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 949.00000, 351.00000),
+(121, 0, 2, 0.00000, 1.00000, 1400.00000, 0.00000, 0.000, 1106.00000, 294.00000),
+(122, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000),
+(123, 0, 2, 0.00000, 1.00000, 1400.00000, 0.00000, 0.000, 1106.00000, 294.00000),
+(124, 0, 4, 0.00000, 1.00000, 3400.00000, 0.00000, 0.000, 2686.00000, 714.00000),
+(125, 0, 7, 0.00000, 1.00000, 30000.00000, 0.00000, 0.000, 23700.00000, 6300.00000),
+(126, 0, 8, 0.00000, 3.00000, 135000.00000, 0.00000, 0.000, 106650.00000, 28350.00000),
+(127, 0, 1, 0.00000, 1.00000, 1300.00000, 0.00000, 0.000, 1027.00000, 273.00000);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `venta_medio_pago`
+--
+
+CREATE TABLE `venta_medio_pago` (
+  `id_venta` int(11) NOT NULL,
+  `id_medio` smallint(6) NOT NULL,
+  `monto` double(15,5) DEFAULT 0.00000
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='InnoDB free: 15360 kB; InnoDB ' ROW_FORMAT=DYNAMIC;
+
+--
+-- Volcado de datos para la tabla `venta_medio_pago`
+--
+
+INSERT INTO `venta_medio_pago` (`id_venta`, `id_medio`, `monto`) VALUES
+(1, 1, 100.00000),
+(1, 2, 50.00000),
+(2, 1, 0.00000),
+(4, 1, 0.00000),
+(5, 1, 0.00000),
+(6, 1, 0.00000),
+(7, 1, 0.00000),
+(8, 1, 0.00000),
+(9, 1, 0.00000),
+(10, 1, 0.00000),
+(11, 1, 0.00000),
+(12, 3, 0.00000),
+(13, 3, 0.00000),
+(14, 3, 0.00000),
+(15, 11, 0.00000),
+(16, 11, 0.00000),
+(17, 3, 0.00000),
+(18, 3, 0.00000),
+(19, 3, 0.00000),
+(20, 2, 0.00000),
+(21, 2, 0.00000),
+(22, 3, 0.00000),
+(23, 8, 0.00000),
+(24, 7, 0.00000),
+(25, 3, 1300.00000),
+(26, 3, 1700.00000),
+(27, 2, 1300.00000),
+(28, 5, 3400.00000),
+(29, 1, 1400.00000),
+(32, 3, 5200.00000),
+(33, 1, 5000.00000),
+(34, 3, 2800.00000),
+(35, 3, 30000.00000),
+(51, 4, 1400.00000),
+(52, 4, 30000.00000),
+(53, 4, 1300.00000),
+(54, 3, 1300.00000),
+(55, 4, 1300.00000),
+(56, 3, 1300.00000),
+(57, 4, 1300.00000),
+(58, 4, 1300.00000),
+(59, 4, 1300.00000),
+(60, 3, 1300.00000),
+(61, 3, 1300.00000),
+(62, 4, 1300.00000),
+(63, 4, 1300.00000),
+(64, 4, 1300.00000),
+(65, 4, 1300.00000),
+(66, 4, 1300.00000),
+(67, 4, 1300.00000),
+(68, 4, 5100.00000),
+(69, 1, 6500.00000),
+(70, 1, 1300.00000),
+(71, 1, 1300.00000),
+(72, 4, 1300.00000),
+(73, 3, 1300.00000),
+(74, 4, 2600.00000),
+(75, 4, 5200.00000),
+(76, 4, 1300.00000),
+(77, 4, 2600.00000),
+(78, 3, 2600.00000),
+(79, 3, 1300.00000),
+(80, 3, 1300.00000),
+(81, 4, 1300.00000),
+(82, 4, 2800.00000),
+(83, 4, 1400.00000),
+(84, 4, 1400.00000),
+(85, 4, 1400.00000),
+(86, 4, 1400.00000),
+(89, 1, 1300.00000),
+(90, 3, 1300.00000),
+(91, 4, 1300.00000),
+(92, 3, 1300.00000),
+(93, 3, 1300.00000),
+(94, 3, 1300.00000),
+(95, 3, 1300.00000),
+(96, 3, 1300.00000),
+(97, 4, 1300.00000),
+(98, 1, 1300.00000),
+(99, 1, 1300.00000),
+(100, 3, 1300.00000),
+(101, 1, 1300.00000),
+(102, 3, 1300.00000),
+(103, 1, 1300.00000),
+(104, 4, 1300.00000),
+(105, 4, 1400.00000),
+(106, 4, 12000.00000),
+(107, 4, 1700.00000),
+(108, 4, 1700.00000),
+(110, 11, 3400.00000),
+(111, 3, 10000.00000),
+(112, 3, 30000.00000),
+(113, 3, 90000.00000),
+(114, 4, 24000.00000),
+(115, 1, 45000.00000),
+(116, 2, 6800.00000),
+(117, 4, 45000.00000),
+(118, 10, 1700.00000),
+(119, 3, 12000.00000),
+(120, 3, 1300.00000),
+(121, 1, 1400.00000),
+(122, 3, 1300.00000),
+(123, 3, 1400.00000),
+(124, 3, 3400.00000),
+(125, 3, 30000.00000),
+(126, 3, 135000.00000),
+(127, 4, 1300.00000);
+
+--
+-- Índices para tablas volcadas
+--
+
+--
+-- Indices de la tabla `cliente`
+--
+ALTER TABLE `cliente`
+  ADD PRIMARY KEY (`id_cliente`) USING BTREE,
+  ADD UNIQUE KEY `id_cliente` (`id_cliente`) USING BTREE,
+  ADD KEY `nombre` (`nombre`) USING BTREE,
+  ADD KEY `cuit` (`cuit`) USING BTREE;
+
+--
+-- Indices de la tabla `medio_pago`
+--
+ALTER TABLE `medio_pago`
+  ADD PRIMARY KEY (`id_medio`) USING BTREE,
+  ADD UNIQUE KEY `id_medio` (`id_medio`) USING BTREE,
+  ADD KEY `nombre` (`nombre`) USING BTREE;
+
+--
+-- Indices de la tabla `producto`
+--
+ALTER TABLE `producto`
+  ADD PRIMARY KEY (`id_producto`) USING BTREE,
+  ADD UNIQUE KEY `id_producto` (`id_producto`) USING BTREE,
+  ADD KEY `id_rubro` (`id_rubro`) USING BTREE,
+  ADD KEY `nombre` (`nombre`) USING BTREE,
+  ADD KEY `cod_scanner` (`cod_scanner`) USING BTREE;
+
+--
+-- Indices de la tabla `rubro`
+--
+ALTER TABLE `rubro`
+  ADD PRIMARY KEY (`id_rubro`) USING BTREE,
+  ADD UNIQUE KEY `id_rubro` (`id_rubro`) USING BTREE,
+  ADD KEY `nombre` (`nombre`) USING BTREE;
+
+--
+-- Indices de la tabla `venta`
+--
+ALTER TABLE `venta`
+  ADD PRIMARY KEY (`id_venta`) USING BTREE,
+  ADD UNIQUE KEY `id_venta` (`id_venta`) USING BTREE,
+  ADD UNIQUE KEY `tipo_comprobante` (`tipo_comprobante`,`nro_comprobante`) USING BTREE,
+  ADD KEY `id_cliente` (`id_cliente`) USING BTREE,
+  ADD KEY `fecha` (`fecha`) USING BTREE;
+
+--
+-- Indices de la tabla `venta_cuota`
+--
+ALTER TABLE `venta_cuota`
+  ADD PRIMARY KEY (`id_cuota`),
+  ADD KEY `fecha_pago` (`fecha_pago`) USING BTREE,
+  ADD KEY `fecha_venc` (`fecha_venc`) USING BTREE,
+  ADD KEY `id_venta` (`id_venta`);
+
+--
+-- Indices de la tabla `venta_item`
+--
+ALTER TABLE `venta_item`
+  ADD PRIMARY KEY (`id_venta`,`item`) USING BTREE,
+  ADD KEY `id_producto` (`id_producto`) USING BTREE;
+
+--
+-- Indices de la tabla `venta_medio_pago`
+--
+ALTER TABLE `venta_medio_pago`
+  ADD PRIMARY KEY (`id_venta`,`id_medio`) USING BTREE;
+
+--
+-- AUTO_INCREMENT de las tablas volcadas
+--
+
+--
+-- AUTO_INCREMENT de la tabla `cliente`
+--
+ALTER TABLE `cliente`
+  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT de la tabla `medio_pago`
+--
+ALTER TABLE `medio_pago`
+  MODIFY `id_medio` smallint(6) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT de la tabla `producto`
+--
+ALTER TABLE `producto`
+  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT de la tabla `rubro`
+--
+ALTER TABLE `rubro`
+  MODIFY `id_rubro` smallint(6) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de la tabla `venta`
+--
+ALTER TABLE `venta`
+  MODIFY `id_venta` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
+
+--
+-- AUTO_INCREMENT de la tabla `venta_cuota`
+--
+ALTER TABLE `venta_cuota`
+  MODIFY `id_cuota` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=151;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `venta_cuota`
+--
+ALTER TABLE `venta_cuota`
+  ADD CONSTRAINT `venta_cuota_ibfk_1` FOREIGN KEY (`id_venta`) REFERENCES `venta` (`id_venta`) ON DELETE CASCADE ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

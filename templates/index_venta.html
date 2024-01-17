@@ -1,0 +1,303 @@
+{% extends 'layout.html'%}
+{% block body %}
+<div class="row">
+    <div class="col-md-3">
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+{% for message in messages %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <p>{{ message }}</p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+    </div>
+</div>
+<div class="row justify-content-center" >
+    <div class=" col-md-9" id="miFormulario">
+        <form method="post" class="row g-3 border border-white p-4"  action="{{ url_for('agregar_venta') }}">
+            <div class="col-sm-4">
+                <label for="cliente">Cliente:</label>
+                <select id="cliente" name="cliente" required>
+                {% for cliente in clientes %}
+                    <option value="{{ cliente.0 }}">{{ cliente.3 }}</option>
+                {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-sm-4">
+                <label for="productos">Productos:</label>
+                <div class="dropdown">
+                    <a class="btn btn-info dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                    Seleccione productos
+                    </a>
+                    <div>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <select id="productos" name="productos" multiple required>
+                            {% for producto in productos %}
+                                {%for iv in iva%}
+                                {%if iv[0] == producto[4] %}
+                                <option class="dropdown-item text-info" value="{{ producto.0 }}" data-iva="{{producto.4}}" data-precio="{{ producto.6 }}">{{ producto.3 }} --- IVA {{iv.1}}</option>
+                                {%endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </select>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-sm-4">
+                <label for="cantidades">Cantidades:</label>
+                <input type="text" id="cantidades" name="cantidades" required>
+                <input type="hidden" id="precio_producto" name="precio_producto">
+            </div>        
+                
+            <div class="col-sm-4">
+                <label for="medio_pago">Medio de Pago:</label>
+                <select id="medio_pago" name="medio_pago" required>
+                    {% for medio in medios_pago %}
+                        <option value="{{ medio.0 }}">{{ medio.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-sm-4">
+                <label for="cuotas">Número de Cuotas:</label>
+                <select id="cuotas" name="cuotas" required>
+                <option value="1">1</option>
+                <option value="3">3</option>
+                <option value="6">6</option>
+                <option value="12">12</option>
+                <option value="24">24</option>
+                </select>
+            </div>
+
+            <div class="col-sm-4">
+                <label for="precio_final">Precio Final:</label>
+                <input type="text" id="precio_final" name="precio_final" readonly>
+            </div>
+
+            <div class="col-sm-4" id="monto-cuota-container">
+                <label for="monto_cuota">Monto de Cuota:</label>
+                <input type="text" id="monto_cuota" name="monto_cuota" readonly>
+            </div>
+
+            <!---<div class="col-sm-4">
+                <label for="monto_cuota">Iva:</label>
+                <input type="text" id="iva" name="iva" readonly>
+            </div>--->
+
+          
+            <div class="col-sm-4">
+                <input type="submit" class="btn btn-success" value="Registrar Venta">
+            </div>
+            
+           
+            
+        </form>
+    </div>
+</div>
+
+<div class="row justify-content-center "> 
+    <div class=" col-md-9 m-5">
+    
+        <h3 class="fw-bold">Listado de ventas</h3>
+            <table id="mitabla" class="table table-sm table-bordered border-white" style="width: 100%">
+            <thead>
+            <tr class="table-active">
+                <th scope="row">ID</th>
+                <th scope="row">Cliente</th>
+                <th scope="row">Tipo Comprobante</th>
+                <th scope="row">Número Comprobante</th>
+                <th scope="row">Fecha</th>
+                <th scope="row">Neto</th>
+                <th scope="row">IVA</th>
+                <th scope="row">Monto Total</th>
+                <th scope="row">Producto</th>
+                <th scope="row">Cantidad</th>
+                <th scope="row">Acciones</th>
+                
+            </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas %}
+                    <tr>
+                    <td colspan="1">{{ venta.0 }}</td>
+                    <td colspan="1">{{ venta.1 }}</td>
+                    <td colspan="1">{{ venta.2 }}</td>
+                    <td colspan="1">{{ venta.3 }}</td>
+                    <td colspan="1">{{ venta.4 }}</td>
+                    <td colspan="1">{{ venta.5 }}</td>
+                    <td colspan="1">{{ venta.6 }}</td>
+                    <td colspan="1">{{ venta.7 }}</td>
+                    <td colspan="1">{{ venta.8 }}</td>
+                    <td colspan="1">{{ venta.9 }}</td>
+                    <td colspan="1">
+                        <a class="fa-solid fa-pen-to-square" style="color: #fbf471;"
+                            data-toggle="modal" data-target="#editarModal{{ venta.0 }}">
+                            
+                        </a>
+                        
+                        <a class="fa-solid fa-trash" style="color: #ff2222;"
+                            href="{{ url_for('eliminar_venta', id_venta=venta.0) }}"
+                            onclick="return confirm('¿Estás seguro que deseas eliminar este producto?')">
+                        </a>
+                    </td>
+                    </tr>
+                    <div class="modal fade" id="editarModal{{ venta.0 }}" tabindex="-1" role="dialog" aria-labelledby="editarModalLabel{{ venta.0 }}" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editarModalLabel{{ venta.0 }}">Editar Venta</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="{{ url_for('editar_venta', id_venta=venta.0) }}" method="POST">
+                                        <div class="form-group">
+                                            <label for="cliente">Cliente:</label>
+                                            <input type="text" class="form-control" id="cliente" name="cliente" value="{{ venta.1 }}" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="tipo_comprobante">Tipo de comprobante:</label>
+                                            <input type="text" class="form-control" id="tipo_comprobante" name="tipo_comprobante" value="{{ venta.2 }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="nro_comprobante">Número de comprobante:</label>
+                                            <input type="text" class="form-control" id="nro_comprobante" name="nro_comprobante" value="{{ venta.3 }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fecha">Fecha</label>
+                                            <input type="text" class="form-control" id="fecha" name="fecha" value="{{ venta.4 }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="neto">Neto:</label>
+                                            <input type="text" class="form-control" id="neto" name="neto" value="{{ venta.5 }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="iva">IVA:</label>
+                                            <input type="text" class="form-control" id="iva" name="iva" value="{{ venta.6 }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="monto_total">Monto total:</label>
+                                            <input type="text" class="form-control" id="monto_total" name="monto_total" value="{{ venta.7 }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="producto">Producto:</label>
+                                            <input type="text" class="form-control" id="producto" name="producto" value="{{ venta.8 }}" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="cantidad">Cantidad:</label>
+                                            <input type="text" class="form-control" id="cantitdad" name="cantidad" value="{{ venta.9 }}" required>
+                                        </div>
+                                        <!-- Agrega aquí los campos adicionales según tu nueva estructura -->
+                                        <!-- ... -->
+                                        <button class="btn btn-primary" type="submit">Guardar</button>
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>    
+                {% endfor %}
+            </tbody>
+            </table>
+    </div>    
+</div>   
+<script>
+
+function imprimirFormulario() {
+        // Oculta el botón de impresión antes de imprimir
+        document.querySelector('button').style.display = 'none';
+        // Imprime la página actual
+        window.print();
+        // Vuelve a mostrar el botón después de la impresión
+        document.querySelector('button').style.display = 'block';
+    }
+// Escucha el evento de cambio en la selección de cuotas
+document.getElementById('cuotas').addEventListener('change', calcularMontoCuota);
+
+function calcularMontoCuota() {
+    // Obtiene el precio final del campo correspondiente
+    var precioFinal = parseFloat(document.getElementById('precio_final').value) || 0;
+    
+    // Obtiene el número de cuotas seleccionadas
+    var cuotas = parseFloat(document.getElementById('cuotas').value) || 1;
+    
+
+    // Verifica si hay más de 1 cuota antes de calcular el monto de cuota
+    if (cuotas > 1) {
+        // Calcula la tasa de interés adicional dinámicamente
+        var tasaBase = 0.05;
+        var tasaInteresAdicional = tasaBase + cuotas * 0.20;
+
+        // Calcula el monto de la cuota según la fórmula dada
+        var montoCuota = precioFinal / cuotas * (1 + tasaInteresAdicional);
+        
+        // Muestra el precio final y el monto de la cuota en los campos correspondientes
+        document.getElementById('precio_final').value = precioFinal.toFixed(2);
+        document.getElementById('monto_cuota').value = montoCuota.toFixed(2);
+    } else {
+        // Si hay 1 cuota, simplemente muestra el precio final
+        document.getElementById('precio_final').value = precioFinal.toFixed(2);
+        
+        // Borra el campo de monto de cuota
+        document.getElementById('monto_cuota').value = '';
+    }
+}
+
+// Escucha el evento de cambio en la selección de productos
+document.getElementById('productos').addEventListener('change', actualizarPrecio);
+
+// Escucha el evento de entrada en el campo de cantidades
+document.getElementById('cantidades').addEventListener('input', actualizarPrecio);
+
+// Función para actualizar el precio total al cambiar la selección de productos o la cantidad
+function actualizarPrecio() {
+    // Obtiene el elemento de selección de productos y el campo de cantidades
+    var productosSelect = document.getElementById('productos');
+    var cantidadesInput = document.getElementById('cantidades');
+
+    // Obtiene las opciones seleccionadas
+    var selectedOptions = Array.from(productosSelect.selectedOptions);
+
+    // Obtiene las cantidades ingresadas
+    var cantidadesArray = cantidadesInput.value.split(',');
+
+    // Calcula el precio total sumando los productos seleccionados
+    var precioTotal = 0;
+    for (var i = 0; i < selectedOptions.length; i++) {
+        var precioProducto = parseFloat(selectedOptions[i].getAttribute('data-precio')) || 0;
+        var cantidadProducto = parseFloat(cantidadesArray[i]) || 0;
+        precioTotal += precioProducto * cantidadProducto;
+    }
+
+    // Actualiza el campo de Precio Final
+    document.getElementById('precio_final').value = precioTotal.toFixed(2);
+}
+
+document.getElementById('productos').addEventListener('change', actualizarIVA);
+
+function actualizarIVA() {
+    var productosSelect = document.getElementById('productos');
+    var ivaInput = document.getElementById('iva');
+
+    // Obtén el índice seleccionado del producto
+    var selectedProductIndex = productosSelect.selectedIndex;
+
+    // Obtén el valor de data-iva del producto seleccionado
+    var ivaProducto = productosSelect.options[selectedProductIndex].dataset.iva;
+
+    // Actualiza el campo de IVA en el formulario
+    ivaInput.value = ivaProducto;
+}
+</script>
+
+
+
+
+
+{% endblock %}
